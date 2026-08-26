@@ -194,13 +194,17 @@
   .badge-bookmark { background: var(--tealL); color: var(--teal); }
   .trial-linked { margin-top: 6px; padding: 6px 10px; background: var(--card); border-radius: 8px; font-size: 12px; border: 1px dashed var(--pinkM); color: var(--pinkD); }
   .trial-source { margin-top: 4px; font-size: 12px; color: var(--text2); }
-  .trial-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+  .trial-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; flex-wrap: wrap; max-width: 160px; justify-content: flex-end; }
   .trial-item:hover .trial-actions { opacity: 1; }
-  .trial-action { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer; color: var(--text2); font-size: 13px; }
+  .trial-action {
+    width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer; color: var(--text2); font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
   .trial-action:hover { background: var(--pinkL); color: var(--pinkD); }
   .trial-action-green:hover { background: var(--greenL); color: var(--green); }
   .trial-action-red:hover { background: var(--redL); color: var(--red); }
   .trial-action-orange:hover { background: var(--orangeL); color: var(--orange); }
+  .trial-action-blue:hover { background: var(--blueL); color: #1565c0; }
 
   .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .calendar-month { font-size: 18px; font-weight: 700; }
@@ -281,8 +285,8 @@
     border-radius: 20px;
     padding: 24px;
     width: 90%;
-    max-width: 480px;
-    max-height: 80vh;
+    max-width: 520px;
+    max-height: 85vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
   }
@@ -331,6 +335,27 @@
 
   .data-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; }
   .data-actions button { font-size: 11px; padding: 4px 10px; }
+  
+  .link-checklist {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .link-checklist label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+  .link-checklist label:hover { background: var(--pinkS); }
+  .link-checklist input { width: 16px; height: 16px; accent-color: var(--pinkD); flex-shrink: 0; }
+  .link-checklist span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 <base target="_blank">
 </head>
@@ -502,13 +527,13 @@
 <!-- 弹窗：试用 -->
 <div class="modal-overlay" id="trialModal">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title">记录试用</div><button class="modal-close" onclick="closeTrialModal()">×</button></div>
+    <div class="modal-header"><div class="modal-title" id="modalTitle">记录试用</div><button class="modal-close" onclick="closeTrialModal()">×</button></div>
     <div class="form-group"><label class="form-label">名称</label><input class="input" id="tName" placeholder="比如：三顿半 7号咖啡"></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">分类</label>
+      <div class="form-group" style="flex:1"><label class="form-label">分类</label>
         <select class="input" id="tCat"><option value="food">🍔 吃的</option><option value="drink">🥤 喝的</option><option value="watch">📺 看的</option><option value="play">🎮 玩的</option><option value="other">📦 其他</option></select>
       </div>
-      <div class="form-group"><label class="form-label">状态</label>
+      <div class="form-group" style="flex:1"><label class="form-label">状态</label>
         <select class="input" id="tVerdict">
           <option value="bookmark">🌱 种草待试</option><option value="pending">⏳ 待评价</option>
           <option value="rec">⭐ 推荐</option><option value="trash">🗑 不推荐</option>
@@ -516,7 +541,9 @@
       </div>
     </div>
     <div class="form-group"><label class="form-label">从哪看到的？（可选）</label><input class="input" id="tSource" placeholder="比如：小红书@XXX"></div>
-    <div class="form-group"><label class="form-label">关联视频（可选）</label><select class="input" id="tLink"><option value="">不关联</option></select></div>
+    <div class="form-group"><label class="form-label">关联视频（可多选）</label>
+      <div class="link-checklist" id="tLink"></div>
+    </div>
     <div class="form-group"><label class="form-label">备注</label><textarea class="input textarea" id="tNote"></textarea></div>
     <div style="display:flex;gap:10px;"><button class="btn" style="flex:1;" onclick="saveTrial()">保存</button><button class="btn btn-outline" style="flex:1;" onclick="closeTrialModal()">取消</button></div>
   </div>
@@ -531,24 +558,24 @@ const DEFAULT_CONTENTS = [
 ];
 
 const DEFAULT_TRIALS = [
-  {id:201,name:"瑞幸 桂花龙井拿铁",cat:"drink",verdict:"rec",note:"桂花味很正，龙井茶底清爽",date:"2026-08-24",linkedContent:null,tags:["咖啡","瑞幸","桂花"],source:""},
-  {id:202,name:"三顿半 7号咖啡",cat:"drink",verdict:"rec",note:"深烘风味浓郁，适合做拿铁",date:"2026-08-22",linkedContent:null,tags:["咖啡","三顿半"],source:""},
-  {id:203,name:"某宝 9.9 包邮咖啡豆",cat:"drink",verdict:"trash",note:"味道像烧焦的木头",date:"2026-08-18",linkedContent:null,tags:["咖啡","踩雷"],source:""},
-  {id:204,name:"星露谷物语",cat:"play",verdict:"rec",note:"种田治愈，1000小时玩家",date:"2026-08-20",linkedContent:2,tags:["游戏","种田","steam"],source:""},
-  {id:205,name:"Netflix 《三体》",cat:"watch",verdict:"trash",note:"改编得一塌糊涂",date:"2026-08-15",linkedContent:null,tags:["影视","三体"],source:""},
-  {id:206,name:"黑神话悟空",cat:"play",verdict:"rec",note:"美术顶级，战斗手感一流",date:"2026-08-10",linkedContent:2,tags:["游戏","国产","steam"],source:""},
-  {id:207,name:"盒马 海盐奶盖粉",cat:"food",verdict:"rec",note:"复刻成功率90%",date:"2026-08-12",linkedContent:1,tags:["美食","海盐奶盖"],source:""},
-  {id:208,name:"哈迪斯 Hades",cat:"play",verdict:"rec",note:"肉鸽神作，手感无敌",date:"2026-08-14",linkedContent:2,tags:["游戏","肉鸽","steam"],source:""},
-  {id:209,name:"空洞骑士",cat:"play",verdict:"rec",note:"类银河恶魔城巅峰",date:"2026-08-16",linkedContent:2,tags:["游戏","类银河","steam"],source:""},
-  {id:210,name:"Manner 桂花拿铁",cat:"drink",verdict:"rec",note:"比瑞幸更苦一点",date:"2026-08-23",linkedContent:null,tags:["咖啡","Manner","桂花"],source:""},
-  {id:211,name:"%Arabica 西班牙拿铁",cat:"drink",verdict:"bookmark",note:"小红书很多人推",date:"2026-08-26",linkedContent:null,tags:["咖啡","Arabica"],source:"小红书@咖啡日记"},
-  {id:212,name:"艾尔登法环 DLC",cat:"play",verdict:"bookmark",note:"等打折入手",date:"2026-08-25",linkedContent:null,tags:["游戏","魂系","steam"],source:"B站评测"},
-  {id:213,name:"蓝瓶咖啡 海耶斯谷",cat:"drink",verdict:"bookmark",note:"朋友推荐说手冲很绝",date:"2026-08-24",linkedContent:null,tags:["咖啡","蓝瓶","手冲"],source:"朋友推荐"},
-  {id:214,name:"《沙丘2》",cat:"watch",verdict:"bookmark",note:"等下映后流媒体上看",date:"2026-08-20",linkedContent:null,tags:["影视","沙丘","科幻"],source:"豆瓣高分"},
-  {id:215,name:"治光师 野草莓",cat:"drink",verdict:"bookmark",note:"听说做奶咖有草莓味",date:"2026-08-22",linkedContent:null,tags:["咖啡","治光师"],source:"咖啡群友"},
-  {id:216,name:"拼多多手冲壶",cat:"drink",verdict:"trash",note:"壶嘴漏水",date:"2026-08-16",linkedContent:null,tags:["咖啡","手冲","踩雷"],source:""},
-  {id:217,name:"动物森友会",cat:"play",verdict:"rec",note:"岛建超治愈",date:"2026-08-11",linkedContent:2,tags:["游戏","种田","switch"],source:""},
-  {id:218,name:"塞尔达传说王国之泪",cat:"play",verdict:"rec",note:"自由度爆表",date:"2026-08-13",linkedContent:2,tags:["游戏","开放世界","switch"],source:""},
+  {id:201,name:"瑞幸 桂花龙井拿铁",cat:"drink",verdict:"rec",note:"桂花味很正，龙井茶底清爽",date:"2026-08-24",linkedContents:[],tags:["咖啡","瑞幸","桂花"],source:""},
+  {id:202,name:"三顿半 7号咖啡",cat:"drink",verdict:"rec",note:"深烘风味浓郁，适合做拿铁",date:"2026-08-22",linkedContents:[],tags:["咖啡","三顿半"],source:""},
+  {id:203,name:"某宝 9.9 包邮咖啡豆",cat:"drink",verdict:"trash",note:"味道像烧焦的木头",date:"2026-08-18",linkedContents:[],tags:["咖啡","踩雷"],source:""},
+  {id:204,name:"星露谷物语",cat:"play",verdict:"rec",note:"种田治愈，1000小时玩家",date:"2026-08-20",linkedContents:[2],tags:["游戏","种田","steam"],source:""},
+  {id:205,name:"Netflix 《三体》",cat:"watch",verdict:"trash",note:"改编得一塌糊涂",date:"2026-08-15",linkedContents:[],tags:["影视","三体"],source:""},
+  {id:206,name:"黑神话悟空",cat:"play",verdict:"rec",note:"美术顶级，战斗手感一流",date:"2026-08-10",linkedContents:[2],tags:["游戏","国产","steam"],source:""},
+  {id:207,name:"盒马 海盐奶盖粉",cat:"food",verdict:"rec",note:"复刻成功率90%",date:"2026-08-12",linkedContents:[1],tags:["美食","海盐奶盖"],source:""},
+  {id:208,name:"哈迪斯 Hades",cat:"play",verdict:"rec",note:"肉鸽神作，手感无敌",date:"2026-08-14",linkedContents:[2],tags:["游戏","肉鸽","steam"],source:""},
+  {id:209,name:"空洞骑士",cat:"play",verdict:"rec",note:"类银河恶魔城巅峰",date:"2026-08-16",linkedContents:[2],tags:["游戏","类银河","steam"],source:""},
+  {id:210,name:"Manner 桂花拿铁",cat:"drink",verdict:"rec",note:"比瑞幸更苦一点",date:"2026-08-23",linkedContents:[],tags:["咖啡","Manner","桂花"],source:""},
+  {id:211,name:"%Arabica 西班牙拿铁",cat:"drink",verdict:"bookmark",note:"小红书很多人推",date:"2026-08-26",linkedContents:[],tags:["咖啡","Arabica"],source:"小红书@咖啡日记"},
+  {id:212,name:"艾尔登法环 DLC",cat:"play",verdict:"bookmark",note:"等打折入手",date:"2026-08-25",linkedContents:[],tags:["游戏","魂系","steam"],source:"B站评测"},
+  {id:213,name:"蓝瓶咖啡 海耶斯谷",cat:"drink",verdict:"bookmark",note:"朋友推荐说手冲很绝",date:"2026-08-24",linkedContents:[],tags:["咖啡","蓝瓶","手冲"],source:"朋友推荐"},
+  {id:214,name:"《沙丘2》",cat:"watch",verdict:"bookmark",note:"等下映后流媒体上看",date:"2026-08-20",linkedContents:[],tags:["影视","沙丘","科幻"],source:"豆瓣高分"},
+  {id:215,name:"治光师 野草莓",cat:"drink",verdict:"bookmark",note:"听说做奶咖有草莓味",date:"2026-08-22",linkedContents:[],tags:["咖啡","治光师"],source:"咖啡群友"},
+  {id:216,name:"拼多多手冲壶",cat:"drink",verdict:"trash",note:"壶嘴漏水",date:"2026-08-16",linkedContents:[],tags:["咖啡","手冲","踩雷"],source:""},
+  {id:217,name:"动物森友会",cat:"play",verdict:"rec",note:"岛建超治愈",date:"2026-08-11",linkedContents:[2],tags:["游戏","种田","switch"],source:""},
+  {id:218,name:"塞尔达传说王国之泪",cat:"play",verdict:"rec",note:"自由度爆表",date:"2026-08-13",linkedContents:[2],tags:["游戏","开放世界","switch"],source:""},
 ];
 
 // ==================== localStorage 持久化 ====================
@@ -558,8 +585,23 @@ function loadData() {
     const savedTrials = localStorage.getItem('cs_trials');
     if (savedContents) contents = JSON.parse(savedContents);
     else contents = JSON.parse(JSON.stringify(DEFAULT_CONTENTS));
-    if (savedTrials) trials = JSON.parse(savedTrials);
-    else trials = JSON.parse(JSON.stringify(DEFAULT_TRIALS));
+    
+    if (savedTrials) {
+      trials = JSON.parse(savedTrials);
+      // 迁移旧数据：linkedContent 单字段 -> linkedContents 数组
+      trials.forEach(t => {
+        if (t.linkedContent !== undefined && t.linkedContent !== null) {
+          if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+          if (!t.linkedContents.includes(t.linkedContent)) {
+            t.linkedContents.push(t.linkedContent);
+          }
+          delete t.linkedContent;
+        }
+        if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+      });
+    } else {
+      trials = JSON.parse(JSON.stringify(DEFAULT_TRIALS));
+    }
   } catch(e) {
     contents = JSON.parse(JSON.stringify(DEFAULT_CONTENTS));
     trials = JSON.parse(JSON.stringify(DEFAULT_TRIALS));
@@ -607,7 +649,19 @@ function importData() {
       try {
         const data = JSON.parse(ev.target.result);
         if(data.contents) contents = data.contents;
-        if(data.trials) trials = data.trials;
+        if(data.trials) {
+          trials = data.trials;
+          trials.forEach(t => {
+            if (t.linkedContent !== undefined && t.linkedContent !== null) {
+              if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+              if (!t.linkedContents.includes(t.linkedContent)) {
+                t.linkedContents.push(t.linkedContent);
+              }
+              delete t.linkedContent;
+            }
+            if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+          });
+        }
         saveData();
         renderAll();
         alert('数据导入成功！');
@@ -624,7 +678,9 @@ function importData() {
 let currentDate = new Date(2026,7,27), currentView='calendar', larkConnected=false, trialFilter='all', libFilter='all';
 const catEmoji={food:"🍔",drink:"🥤",watch:"📺",play:"🎮",other:"📦"};
 const catName={food:"吃的",drink:"喝的",watch:"看的",play:"玩的",other:"其他"};
+const verdictEmoji={bookmark:"🌱",pending:"⏳",rec:"⭐",trash:"🗑"};
 let contents, trials;
+let editingTrialId = null;
 
 loadData();
 
@@ -665,9 +721,9 @@ function doSearch(q){
   if(tm.length){
     html+=`<div class="search-sec">🧪 试用记录 (${tm.length})</div>`;
     html+=tm.map(t=>{
-      const linked=t.linkedContent?contents.find(c=>c.id===t.linkedContent):null;
+      const linked = (t.linkedContents || []).map(lid => contents.find(c => c.id === lid)).filter(Boolean);
       const badge=t.verdict==='rec'?'<span class="trial-badge badge-rec">⭐ 推荐</span>':t.verdict==='trash'?'<span class="trial-badge badge-trash">🗑 不推荐</span>':t.verdict==='bookmark'?'<span class="trial-badge badge-bookmark">🌱 种草待试</span>':'<span class="trial-badge badge-pending">⏳ 待评价</span>';
-      return `<div class="search-item"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="search-title">${catEmoji[t.cat]} ${hl(t.name,query)}</div>${badge}</div><div class="search-desc">${hl(t.note,query)}</div><div style="margin-top:6px;"><span class="search-pill" style="background:var(--pinkL);color:var(--pinkD);">${catName[t.cat]}</span>${linked?`<span class="search-pill" style="background:var(--greenL);color:var(--green);">📎 出现在《${linked.title}》</span>`:''}${t.source?`<span class="search-pill" style="background:var(--tealL);color:var(--teal);">📌 ${hl(t.source,query)}</span>`:''}</div></div>`;
+      return `<div class="search-item"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="search-title">${catEmoji[t.cat]} ${hl(t.name,query)}</div>${badge}</div><div class="search-desc">${hl(t.note,query)}</div><div style="margin-top:6px;"><span class="search-pill" style="background:var(--pinkL);color:var(--pinkD);">${catName[t.cat]}</span>${linked.map(l=>`<span class="search-pill" style="background:var(--greenL);color:var(--green);">📎 ${l.title}</span>`).join('')}${t.source?`<span class="search-pill" style="background:var(--tealL);color:var(--teal);">📌 ${hl(t.source,query)}</span>`:''}</div></div>`;
     }).join('');
   }
   if(cm.length){
@@ -707,6 +763,14 @@ function setTrialFilter(f){
   document.querySelectorAll('.trial-tab')[map[f]]?.classList.add('active');
   renderTrials();
 }
+
+function getVerdictBadge(v) {
+  if(v==='rec') return '<span class="trial-badge badge-rec">⭐ 推荐</span>';
+  if(v==='trash') return '<span class="trial-badge badge-trash">🗑 不推荐</span>';
+  if(v==='bookmark') return '<span class="trial-badge badge-bookmark">🌱 种草待试</span>';
+  return '<span class="trial-badge badge-pending">⏳ 待评价</span>';
+}
+
 function renderTrials(){
   const list=document.getElementById('trialList');
   let items=trialFilter==='all'?trials:trials.filter(t=>t.verdict===trialFilter);
@@ -714,36 +778,149 @@ function renderTrials(){
   if(!items.length){ list.innerHTML='<div class="empty">还没有记录</div>'; }
   else {
     list.innerHTML=items.map(t=>{
-      const linked=t.linkedContent?contents.find(c=>c.id===t.linkedContent):null;
-      const badge=t.verdict==='rec'?'<span class="trial-badge badge-rec">⭐ 推荐</span>':t.verdict==='trash'?'<span class="trial-badge badge-trash">🗑 不推荐</span>':t.verdict==='bookmark'?'<span class="trial-badge badge-bookmark">🌱 种草待试</span>':'<span class="trial-badge badge-pending">⏳ 待评价</span>';
-      return `<div class="trial-item"><div class="trial-thumb">${catEmoji[t.cat]}</div><div class="trial-info"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="trial-name">${t.name}</div>${badge}</div><div class="trial-meta"><span>${catName[t.cat]}</span><span>·</span><span>${t.date}</span>${t.tags.map(tag=>`<span>·</span><span class="tag tag-pink">${tag}</span>`).join('')}</div>${t.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px;">${t.note}</div>`:''}${t.source?`<div class="trial-source">📌 来源：${t.source}</div>`:''}${linked?`<div class="trial-linked">📎 已推荐于《${linked.title}》</div>`:''}</div><div class="trial-actions">${t.verdict==='bookmark'?'<button class="trial-action trial-action-orange" onclick="toggleTrial('+t.id+',\'pending\')" title="开始试用">☕</button>':''}<button class="trial-action trial-action-green" onclick="toggleTrial(${t.id},'rec')" title="推荐">⭐</button><button class="trial-action trial-action-red" onclick="toggleTrial(${t.id},'trash')" title="不推荐">🗑</button><button class="trial-action" onclick="delTrial(${t.id})" title="删除">✕</button></div></div>`;
+      const linked = (t.linkedContents || []).map(lid => contents.find(c => c.id === lid)).filter(Boolean);
+      const badge = getVerdictBadge(t.verdict);
+      
+      const flows = [];
+      if(t.verdict !== 'bookmark') flows.push(`<button class="trial-action trial-action-orange" onclick="toggleTrial(${t.id},'bookmark')" title="移到种草">🌱</button>`);
+      if(t.verdict !== 'pending') flows.push(`<button class="trial-action trial-action-orange" onclick="toggleTrial(${t.id},'pending')" title="移到待评价">⏳</button>`);
+      if(t.verdict !== 'rec') flows.push(`<button class="trial-action trial-action-green" onclick="toggleTrial(${t.id},'rec')" title="移到备选库">⭐</button>`);
+      if(t.verdict !== 'trash') flows.push(`<button class="trial-action trial-action-red" onclick="toggleTrial(${t.id},'trash')" title="移到垃圾桶">🗑</button>`);
+      
+      return `<div class="trial-item">
+        <div class="trial-thumb">${catEmoji[t.cat]}</div>
+        <div class="trial-info">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="trial-name">${t.name}</div>
+            ${badge}
+          </div>
+          <div class="trial-meta">
+            <span>${catName[t.cat]}</span><span>·</span><span>${t.date}</span>
+            ${t.tags.map(tag=>`<span>·</span><span class="tag tag-pink">${tag}</span>`).join('')}
+          </div>
+          ${t.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px;">${t.note}</div>`:''}
+          ${t.source?`<div class="trial-source">📌 来源：${t.source}</div>`:''}
+          ${linked.map(l=>`<div class="trial-linked">📎 已推荐于《${l.title}》</div>`).join('')}
+        </div>
+        <div class="trial-actions">
+          <button class="trial-action trial-action-blue" onclick="openTrialModal(${t.id})" title="编辑">✏️</button>
+          ${flows.join('')}
+          <button class="trial-action" onclick="delTrial(${t.id})" title="删除">✕</button>
+        </div>
+      </div>`;
     }).join('');
   }
 }
-function openTrialModal(){
-  const sel=document.getElementById('tLink');
-  sel.innerHTML='<option value="">不关联</option>'+contents.map(c=>`<option value="${c.id}">${c.title}</option>`).join('');
+
+function openTrialModal(id){
+  editingTrialId = id || null;
+  const t = id ? trials.find(x => x.id === id) : null;
+  
+  document.getElementById('tName').value = t ? t.name : '';
+  document.getElementById('tCat').value = t ? t.cat : 'food';
+  document.getElementById('tVerdict').value = t ? t.verdict : 'bookmark';
+  document.getElementById('tSource').value = t ? (t.source || '') : '';
+  document.getElementById('tNote').value = t ? (t.note || '') : '';
+  
+  const linkContainer = document.getElementById('tLink');
+  if (contents.length === 0) {
+    linkContainer.innerHTML = '<div style="padding:10px;font-size:13px;color:var(--text2);">还没有已发布内容，先去日历里添加吧</div>';
+  } else {
+    linkContainer.innerHTML = contents.map(c => {
+      const checked = t && t.linkedContents && t.linkedContents.includes(c.id) ? 'checked' : '';
+      return `<label><input type="checkbox" value="${c.id}" ${checked}><span>${c.title}</span></label>`;
+    }).join('');
+  }
+  
+  document.getElementById('modalTitle').textContent = t ? '编辑试用' : '记录试用';
   document.getElementById('trialModal').classList.add('show');
 }
-function closeTrialModal(){ document.getElementById('trialModal').classList.remove('show'); }
-function saveTrial(){
-  const name=document.getElementById('tName').value, cat=document.getElementById('tCat').value, verdict=document.getElementById('tVerdict').value;
-  const link=document.getElementById('tLink').value, note=document.getElementById('tNote').value, source=document.getElementById('tSource').value;
-  if(!name)return alert('请输入名称');
-  trials.unshift({id:Date.now(),name,cat,verdict,note,source,date:new Date().toISOString().slice(0,10),linkedContent:link?parseInt(link):null,tags:[]});
-  document.getElementById('tName').value=''; document.getElementById('tNote').value=''; document.getElementById('tSource').value='';
-  closeTrialModal(); saveData(); renderTrials(); checkVideoAlert(); updateStats();
+
+function closeTrialModal(){ 
+  document.getElementById('trialModal').classList.remove('show'); 
+  editingTrialId = null;
 }
+
+function saveTrial(){
+  const name = document.getElementById('tName').value;
+  const cat = document.getElementById('tCat').value;
+  const verdict = document.getElementById('tVerdict').value;
+  const note = document.getElementById('tNote').value;
+  const source = document.getElementById('tSource').value;
+  
+  const checked = Array.from(document.querySelectorAll('#tLink input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+  
+  if (!name) return alert('请输入名称');
+  
+  if (editingTrialId) {
+    const t = trials.find(x => x.id === editingTrialId);
+    if (t) {
+      t.name = name;
+      t.cat = cat;
+      t.verdict = verdict;
+      t.note = note;
+      t.source = source;
+      t.linkedContents = checked;
+    }
+  } else {
+    trials.unshift({
+      id: Date.now(),
+      name, cat, verdict, note, source,
+      date: new Date().toISOString().slice(0, 10),
+      linkedContents: checked,
+      tags: []
+    });
+  }
+  
+  document.getElementById('tName').value = '';
+  document.getElementById('tNote').value = '';
+  document.getElementById('tSource').value = '';
+  
+  closeTrialModal();
+  saveData();
+  renderTrials();
+  checkVideoAlert();
+  updateStats();
+}
+
 function fastTrial(){
   const name=document.getElementById('ftName').value, cat=document.getElementById('ftCat').value, verdict=document.getElementById('ftVerdict').value;
   const note=document.getElementById('ftNote').value, source=document.getElementById('ftSource').value;
   if(!name)return alert('请输入名称');
-  trials.unshift({id:Date.now(),name,cat,verdict,note,source,date:new Date().toISOString().slice(0,10),linkedContent:null,tags:[]});
-  document.getElementById('ftName').value=''; document.getElementById('ftNote').value=''; document.getElementById('ftSource').value='';
-  saveData(); renderTrials(); checkVideoAlert(); updateStats();
+  trials.unshift({
+    id: Date.now(),
+    name, cat, verdict, note, source,
+    date: new Date().toISOString().slice(0, 10),
+    linkedContents: [],
+    tags: []
+  });
+  document.getElementById('ftName').value=''; 
+  document.getElementById('ftNote').value=''; 
+  document.getElementById('ftSource').value='';
+  saveData(); 
+  renderTrials(); 
+  checkVideoAlert(); 
+  updateStats();
 }
-function toggleTrial(id,v){ const t=trials.find(x=>x.id===id); if(t){t.verdict=v; saveData(); renderTrials(); checkVideoAlert(); updateStats();} }
-function delTrial(id){ trials=trials.filter(t=>t.id!==id); saveData(); renderTrials(); checkVideoAlert(); updateStats(); }
+
+function toggleTrial(id,v){ 
+  const t=trials.find(x=>x.id===id); 
+  if(t){
+    t.verdict=v; 
+    saveData(); 
+    renderTrials(); 
+    checkVideoAlert(); 
+    updateStats();
+  } 
+}
+
+function delTrial(id){ 
+  trials=trials.filter(t=>t.id!==id); 
+  saveData(); 
+  renderTrials(); 
+  checkVideoAlert(); 
+  updateStats(); 
+}
 
 // ===== 自动整理 =====
 function autoOrg(){
