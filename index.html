@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌸 Content Studio - 内容创作中枢</title>
+<style>
+  :root {
+    --bg: #faf8f9;
+    --card: #ffffff;
+    --text: #2d2d2d;
+    --text2: #8a8a8a;
+    --pinkL: #fce4ec;
+    --pinkM: #f8bbd0;
+    --pinkD: #ec407a;
+    --pinkS: #fff0f5;
+    --border: #f0e6ea;
+    --shadow: 0 2px 12px rgba(236,64,122,0.06);
+    --green: #4caf50;
+    --greenL: #e8f5e9;
+    --red: #ef5350;
+    --redL: #ffebee;
+    --orange: #ff9800;
+    --orangeL: #fff3e0;
+    --teal: #26a69a;
+    --tealL: #e0f2f1;
+    --blueL: #e3f2fd;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    max-width: 1400px;
+    margin: 0 auto 16px;
+  }
+  .logo { font-size: 22px; font-weight: 700; color: var(--pinkD); display: flex; align-items: center; gap: 8px; }
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--card);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .nav-tab {
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text2);
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .nav-tab.active { background: var(--pinkL); color: var(--pinkD); }
+  .nav-tab:hover:not(.active) { background: var(--pinkS); color: var(--pinkD); }
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  @media(max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pinkD); }
+  .btn {
+    background: linear-gradient(135deg, #ec407a, #f48fb1);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(236,64,122,0.3); }
+  .btn-outline { background: var(--pinkS); color: var(--pinkD); border: 1px solid var(--pinkM); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-green { background: linear-gradient(135deg, #4caf50, #81c784); }
+  .btn-red { background: linear-gradient(135deg, #ef5350, #ef9a9a); }
+  .input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  .input:focus { border-color: var(--pinkM); box-shadow: 0 0 0 3px var(--pinkL); }
+  .textarea { resize: vertical; min-height: 60px; }
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    margin: 0 4px 4px 0;
+  }
+  .tag-pink { background: var(--pinkS); color: var(--pinkD); }
+  .tag-game { background: var(--blueL); color: #1565c0; }
+  .tag-food { background: var(--orangeL); color: #e65100; }
+  .tag-rec { background: var(--greenL); color: #2e7d32; }
+  .tag-trash { background: var(--redL); color: #c62828; }
+  .tag-bookmark { background: var(--tealL); color: #00695c; }
+
+  .global-search { position: relative; margin-bottom: 16px; max-width: 1400px; margin: 0 auto 16px; }
+  .global-search input { padding: 14px 20px 14px 48px; font-size: 15px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow); width: 100%; }
+  .global-search::before { content: "🔍"; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+  .search-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 90px;
+    z-index: 200;
+  }
+  .search-overlay.show { display: flex; }
+  .search-panel {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px;
+    width: 90%;
+    max-width: 640px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .search-sec { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 10px; }
+  .search-item { padding: 12px 14px; border-radius: 12px; background: var(--bg); margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; }
+  .search-item:hover { border-color: var(--pinkM); background: var(--pinkS); }
+  .search-title { font-weight: 600; font-size: 14px; }
+  .search-desc { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .search-hl { background: rgba(236,64,122,0.15); color: var(--pinkD); padding: 0 3px; border-radius: 4px; font-weight: 600; }
+  .search-pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-right: 6px; margin-top: 6px; }
+  .search-empty { text-align: center; padding: 40px; color: var(--text2); font-size: 14px; }
+
+  .trial-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .trial-tab { padding: 7px 14px; border-radius: 10px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-weight: 500; }
+  .trial-tab.active { background: var(--pinkL); border-color: var(--pinkM); color: var(--pinkD); }
+  .trial-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--bg);
+    margin-bottom: 10px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  .trial-item:hover { border-color: var(--pinkM); background: var(--pinkS); }
+  .trial-thumb { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: var(--card); border: 1px solid var(--border); }
+  .trial-info { flex: 1; min-width: 0; }
+  .trial-name { font-size: 14px; font-weight: 600; }
+  .trial-meta { font-size: 12px; color: var(--text2); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 3px; }
+  .trial-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .badge-rec { background: var(--greenL); color: var(--green); }
+  .badge-trash { background: var(--redL); color: var(--red); }
+  .badge-pending { background: var(--orangeL); color: var(--orange); }
+  .badge-bookmark { background: var(--tealL); color: var(--teal); }
+  .trial-linked { margin-top: 6px; padding: 6px 10px; background: var(--card); border-radius: 8px; font-size: 12px; border: 1px dashed var(--pinkM); color: var(--pinkD); }
+  .trial-source { margin-top: 4px; font-size: 12px; color: var(--text2); }
+  .trial-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; flex-wrap: wrap; max-width: 160px; justify-content: flex-end; }
+  .trial-item:hover .trial-actions { opacity: 1; }
+  .trial-action {
+    width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer; color: var(--text2); font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .trial-action:hover { background: var(--pinkL); color: var(--pinkD); }
+  .trial-action-green:hover { background: var(--greenL); color: var(--green); }
+  .trial-action-red:hover { background: var(--redL); color: var(--red); }
+  .trial-action-orange:hover { background: var(--orangeL); color: var(--orange); }
+  .trial-action-blue:hover { background: var(--blueL); color: #1565c0; }
+
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .calendar-month { font-size: 18px; font-weight: 700; }
+  .calendar-nav { display: flex; gap: 6px; }
+  .calendar-nav button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); cursor: pointer; color: var(--text2); }
+  .calendar-nav button:hover { background: var(--pinkL); color: var(--pinkD); }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .calendar-weekday { text-align: center; font-size: 11px; color: var(--text2); font-weight: 600; padding: 8px 0; }
+  .calendar-day {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 6px;
+    cursor: pointer;
+    min-height: 70px;
+    transition: all 0.15s;
+  }
+  .calendar-day:hover { border-color: var(--pinkM); background: var(--pinkS); }
+  .calendar-day.other-month { opacity: 0.4; background: var(--bg); }
+  .calendar-day.today { border-color: var(--pinkD); background: var(--pinkL); }
+  .calendar-day-number { font-size: 13px; font-weight: 600; }
+  .calendar-day.today .calendar-day-number { color: var(--pinkD); }
+  .calendar-events { width: 100%; margin-top: 2px; }
+  .calendar-event { font-size: 9px; padding: 1px 4px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-green { background: var(--greenL); color: var(--green); }
+  .cal-orange { background: var(--orangeL); color: var(--orange); }
+
+  .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .content-card {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .content-card:hover { border-color: var(--pinkM); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .content-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .content-meta { font-size: 11px; color: var(--text2); }
+
+  .lark-doc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--bg);
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lark-doc:hover { background: var(--pinkL); }
+  .lark-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px;
+    width: 90%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 18px; font-weight: 700; }
+  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg); cursor: pointer; font-size: 18px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-row { display: flex; gap: 10px; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+    max-width: 1400px;
+    margin: 0 auto 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat-number { font-size: 24px; font-weight: 700; color: var(--pinkD); }
+  .stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 13px; }
+  .hidden { display: none !important; }
+
+  .alert-box {
+    background: linear-gradient(135deg, var(--greenL), #c8e6c9);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .alert-box .alert-icon { font-size: 24px; }
+  .alert-box .alert-text { flex: 1; }
+  .alert-box .alert-title { font-weight: 700; font-size: 14px; color: #1b5e20; }
+  .alert-box .alert-desc { font-size: 12px; color: #2e7d32; margin-top: 2px; }
+  .alert-box .btn { padding: 6px 14px; font-size: 12px; }
+
+  .data-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; }
+  .data-actions button { font-size: 11px; padding: 4px 10px; }
+  
+  .link-checklist {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .link-checklist label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+  .link-checklist label:hover { background: var(--pinkS); }
+  .link-checklist input { width: 16px; height: 16px; accent-color: var(--pinkD); flex-shrink: 0; }
+  .link-checklist span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+
+<div class="global-search">
+  <input class="input" id="globalSearch" placeholder="搜索任何东西：游戏名、咖啡、零食、电影... 看我用过没" onfocus="showSearch()" oninput="doSearch(this.value)" onkeydown="if(event.key==='Escape')hideSearch()">
+</div>
+
+<div class="search-overlay" id="searchOverlay" onclick="hideSearch()">
+  <div class="search-panel" onclick="event.stopPropagation()">
+    <div id="searchContent"><div class="search-empty">输入关键词开始搜索<br><span style="font-size:12px;">试试搜 "星露谷"、"海盐"、"桂花" 或 "拿铁"</span></div></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="logo">🌸 Content Studio</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('calendar')">📅 日历</button>
+    <button class="nav-tab" onclick="switchView('library')">📚 内容库</button>
+    <button class="nav-tab" onclick="switchView('trials')">🧪 试用</button>
+    <button class="nav-tab" onclick="switchView('lark')">📎 飞书</button>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-number" id="sTotal">0</div><div class="stat-label">总内容</div></div>
+  <div class="stat-card"><div class="stat-number" id="sDraft">0</div><div class="stat-label">待发布</div></div>
+  <div class="stat-card"><div class="stat-number" id="sBookmark">0</div><div class="stat-label">种草待试</div></div>
+  <div class="stat-card"><div class="stat-number" id="sRec">0</div><div class="stat-label">备选库</div></div>
+  <div class="stat-card"><div class="stat-number" id="sTrash">0</div><div class="stat-label">垃圾桶</div></div>
+</div>
+
+<!-- 日历 -->
+<div id="view-calendar" class="main-grid">
+  <div class="card">
+    <div class="calendar-header">
+      <div class="calendar-month" id="calMonth">2026年8月</div>
+      <div class="calendar-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <button onclick="goToday()">今天</button>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="calendar-grid" id="calGrid"></div>
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span class="dot"></span>已发布内容</div>
+      <div id="publishedList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>快捷添加</div>
+      <div class="form-group"><input class="input" id="qTitle" placeholder="内容标题"></div>
+      <div class="form-row">
+        <select class="input" id="qType"><option value="published">已发布</option><option value="draft">草稿</option></select>
+        <input class="input" type="date" id="qDate">
+      </div>
+      <button class="btn" style="width:100%;margin-top:10px;" onclick="quickAdd()">+ 添加到日历</button>
+    </div>
+  </div>
+</div>
+
+<!-- 内容库 -->
+<div id="view-library" class="main-grid hidden">
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>全部内容</div>
+    <div class="form-group"><input class="input" id="libSearch" placeholder="搜索内容..." onkeyup="if(event.key==='Enter')renderLib()"></div>
+    <div class="content-grid" id="libGrid"></div>
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span class="dot"></span>筛选</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <span class="tag tag-pink" onclick="libFilter='all';renderLib()" style="cursor:pointer;">全部</span>
+        <span class="tag tag-game" onclick="libFilter='game';renderLib()" style="cursor:pointer;">游戏</span>
+        <span class="tag tag-food" onclick="libFilter='food';renderLib()" style="cursor:pointer;">美食</span>
+        <span class="tag tag-rec" onclick="libFilter='published';renderLib()" style="cursor:pointer;">已发布</span>
+        <span class="tag tag-trash" onclick="libFilter='draft';renderLib()" style="cursor:pointer;">草稿</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>关联搜索</div>
+      <input class="input" id="relSearch" placeholder="输入游戏名试试..." style="margin-bottom:10px;" onkeyup="if(event.key==='Enter')doRelSearch()">
+      <div id="relResults"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 试用 -->
+<div id="view-trials" class="main-grid hidden">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:0;"><span class="dot"></span>试用记录</div>
+      <button class="btn btn-sm" onclick="openTrialModal()">+ 记录试用</button>
+    </div>
+    <div id="videoAlert"></div>
+    <div class="trial-tabs">
+      <div class="trial-tab active" onclick="setTrialFilter('all')">全部</div>
+      <div class="trial-tab" onclick="setTrialFilter('bookmark')">🌱 种草待试</div>
+      <div class="trial-tab" onclick="setTrialFilter('pending')">⏳ 待评价</div>
+      <div class="trial-tab" onclick="setTrialFilter('rec')">⭐ 备选库</div>
+      <div class="trial-tab" onclick="setTrialFilter('trash')">🗑 垃圾桶</div>
+    </div>
+    <div id="trialList"></div>
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span class="dot"></span>自动整理</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">把杂碎灵感丢进来，一键结构化</p>
+      <textarea class="input textarea" id="orgInput" placeholder="比如：昨天玩了星露谷，感觉种田很治愈，想做个视频推荐一下..."></textarea>
+      <button class="btn" style="width:100%;margin-top:10px;" onclick="autoOrg()">✨ 一键整理</button>
+      <div id="orgResult" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>快速记录</div>
+      <div class="form-group"><input class="input" id="ftName" placeholder="名称，比如：瑞幸桂花龙井拿铁"></div>
+      <div class="form-row">
+        <select class="input" id="ftCat">
+          <option value="food">🍔 吃的</option><option value="drink">🥤 喝的</option><option value="watch">📺 看的</option>
+          <option value="play">🎮 玩的</option><option value="other">📦 其他</option>
+        </select>
+        <select class="input" id="ftVerdict">
+          <option value="bookmark">🌱 种草待试</option><option value="pending">⏳ 待评价</option>
+          <option value="rec">⭐ 推荐</option><option value="trash">🗑 不推荐</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top:10px;"><input class="input" id="ftSource" placeholder="从哪看到的？（可选）"></div>
+      <textarea class="input textarea" id="ftNote" placeholder="简单评价或种草理由..."></textarea>
+      <button class="btn" style="width:100%;margin-top:10px;" onclick="fastTrial()">💾 记录</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>数据管理</div>
+      <div class="data-actions">
+        <button class="btn btn-sm btn-outline" onclick="exportData()">📤 导出数据</button>
+        <button class="btn btn-sm btn-outline" onclick="importData()">📥 导入数据</button>
+        <button class="btn btn-sm btn-red" onclick="resetData()">🔄 重置默认</button>
+      </div>
+      <p style="font-size:12px;color:var(--text2);">数据自动保存在浏览器本地。换设备或清除缓存会丢失，建议定期导出备份。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 飞书 -->
+<div id="view-lark" class="main-grid hidden">
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>飞书文档</div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--pinkS);border-radius:10px;margin-bottom:12px;font-size:13px;" id="larkStatus">
+      <span>📡</span><span>未连接飞书文档</span><button class="btn btn-sm btn-outline" style="margin-left:auto;" onclick="connectLark()">连接</button>
+    </div>
+    <div id="larkDocs"><div class="empty">连接飞书后，文档自动同步到这里</div></div>
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span class="dot"></span>同步设置</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+        <p>📋 自动同步选题文档</p><p>🏷️ 标签双向映射</p><p>🔗 发布状态回写</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>使用说明</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+        1. 飞书开放平台创建应用<br>2. 获取 App ID / Secret<br>3. 开通云文档权限<br>4. 绑定完成
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：试用 -->
+<div class="modal-overlay" id="trialModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalTitle">记录试用</div><button class="modal-close" onclick="closeTrialModal()">×</button></div>
+    <div class="form-group"><label class="form-label">名称</label><input class="input" id="tName" placeholder="比如：三顿半 7号咖啡"></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1"><label class="form-label">分类</label>
+        <select class="input" id="tCat"><option value="food">🍔 吃的</option><option value="drink">🥤 喝的</option><option value="watch">📺 看的</option><option value="play">🎮 玩的</option><option value="other">📦 其他</option></select>
+      </div>
+      <div class="form-group" style="flex:1"><label class="form-label">状态</label>
+        <select class="input" id="tVerdict">
+          <option value="bookmark">🌱 种草待试</option><option value="pending">⏳ 待评价</option>
+          <option value="rec">⭐ 推荐</option><option value="trash">🗑 不推荐</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">从哪看到的？（可选）</label><input class="input" id="tSource" placeholder="比如：小红书@XXX"></div>
+    <div class="form-group"><label class="form-label">关联视频（可多选）</label>
+      <div class="link-checklist" id="tLink"></div>
+    </div>
+    <div class="form-group"><label class="form-label">备注</label><textarea class="input textarea" id="tNote"></textarea></div>
+    <div style="display:flex;gap:10px;"><button class="btn" style="flex:1;" onclick="saveTrial()">保存</button><button class="btn btn-outline" style="flex:1;" onclick="closeTrialModal()">取消</button></div>
+  </div>
+</div>
+
+<script>
+// ==================== 默认数据 ====================
+const DEFAULT_CONTENTS = [
+  {id:1,title:"vlog 做了海盐奶盖拿铁",type:"video",status:"published",tags:["咖啡","美食","DIY","拿铁","海盐奶盖","vlog"],date:"2026-08-24",desc:"在家复刻咖啡店同款海盐奶盖拿铁"},
+  {id:2,title:"steam 游戏推荐｜我的时间消失器们",type:"video",status:"published",tags:["游戏","steam","推荐","独立游戏"],date:"2026-08-26",desc:"那些让我不知不觉玩到凌晨的游戏"},
+  {id:3,title:"我的电子榨菜库存又更新了🍚",type:"video",status:"published",tags:["影视","电子榨菜","推荐","下饭"],date:"2026-08-28",desc:"最近追的剧和综艺，下饭必备"},
+];
+
+const DEFAULT_TRIALS = [
+  {id:201,name:"瑞幸 桂花龙井拿铁",cat:"drink",verdict:"rec",note:"桂花味很正，龙井茶底清爽",date:"2026-08-24",linkedContents:[],tags:["咖啡","瑞幸","桂花"],source:""},
+  {id:202,name:"三顿半 7号咖啡",cat:"drink",verdict:"rec",note:"深烘风味浓郁，适合做拿铁",date:"2026-08-22",linkedContents:[],tags:["咖啡","三顿半"],source:""},
+  {id:203,name:"某宝 9.9 包邮咖啡豆",cat:"drink",verdict:"trash",note:"味道像烧焦的木头",date:"2026-08-18",linkedContents:[],tags:["咖啡","踩雷"],source:""},
+  {id:204,name:"星露谷物语",cat:"play",verdict:"rec",note:"种田治愈，1000小时玩家",date:"2026-08-20",linkedContents:[2],tags:["游戏","种田","steam"],source:""},
+  {id:205,name:"Netflix 《三体》",cat:"watch",verdict:"trash",note:"改编得一塌糊涂",date:"2026-08-15",linkedContents:[],tags:["影视","三体"],source:""},
+  {id:206,name:"黑神话悟空",cat:"play",verdict:"rec",note:"美术顶级，战斗手感一流",date:"2026-08-10",linkedContents:[2],tags:["游戏","国产","steam"],source:""},
+  {id:207,name:"盒马 海盐奶盖粉",cat:"food",verdict:"rec",note:"复刻成功率90%",date:"2026-08-12",linkedContents:[1],tags:["美食","海盐奶盖"],source:""},
+  {id:208,name:"哈迪斯 Hades",cat:"play",verdict:"rec",note:"肉鸽神作，手感无敌",date:"2026-08-14",linkedContents:[2],tags:["游戏","肉鸽","steam"],source:""},
+  {id:209,name:"空洞骑士",cat:"play",verdict:"rec",note:"类银河恶魔城巅峰",date:"2026-08-16",linkedContents:[2],tags:["游戏","类银河","steam"],source:""},
+  {id:210,name:"Manner 桂花拿铁",cat:"drink",verdict:"rec",note:"比瑞幸更苦一点",date:"2026-08-23",linkedContents:[],tags:["咖啡","Manner","桂花"],source:""},
+  {id:211,name:"%Arabica 西班牙拿铁",cat:"drink",verdict:"bookmark",note:"小红书很多人推",date:"2026-08-26",linkedContents:[],tags:["咖啡","Arabica"],source:"小红书@咖啡日记"},
+  {id:212,name:"艾尔登法环 DLC",cat:"play",verdict:"bookmark",note:"等打折入手",date:"2026-08-25",linkedContents:[],tags:["游戏","魂系","steam"],source:"B站评测"},
+  {id:213,name:"蓝瓶咖啡 海耶斯谷",cat:"drink",verdict:"bookmark",note:"朋友推荐说手冲很绝",date:"2026-08-24",linkedContents:[],tags:["咖啡","蓝瓶","手冲"],source:"朋友推荐"},
+  {id:214,name:"《沙丘2》",cat:"watch",verdict:"bookmark",note:"等下映后流媒体上看",date:"2026-08-20",linkedContents:[],tags:["影视","沙丘","科幻"],source:"豆瓣高分"},
+  {id:215,name:"治光师 野草莓",cat:"drink",verdict:"bookmark",note:"听说做奶咖有草莓味",date:"2026-08-22",linkedContents:[],tags:["咖啡","治光师"],source:"咖啡群友"},
+  {id:216,name:"拼多多手冲壶",cat:"drink",verdict:"trash",note:"壶嘴漏水",date:"2026-08-16",linkedContents:[],tags:["咖啡","手冲","踩雷"],source:""},
+  {id:217,name:"动物森友会",cat:"play",verdict:"rec",note:"岛建超治愈",date:"2026-08-11",linkedContents:[2],tags:["游戏","种田","switch"],source:""},
+  {id:218,name:"塞尔达传说王国之泪",cat:"play",verdict:"rec",note:"自由度爆表",date:"2026-08-13",linkedContents:[2],tags:["游戏","开放世界","switch"],source:""},
+];
+
+// ==================== localStorage 持久化 ====================
+function loadData() {
+  try {
+    const savedContents = localStorage.getItem('cs_contents');
+    const savedTrials = localStorage.getItem('cs_trials');
+    if (savedContents) contents = JSON.parse(savedContents);
+    else contents = JSON.parse(JSON.stringify(DEFAULT_CONTENTS));
+    
+    if (savedTrials) {
+      trials = JSON.parse(savedTrials);
+      // 迁移旧数据：linkedContent 单字段 -> linkedContents 数组
+      trials.forEach(t => {
+        if (t.linkedContent !== undefined && t.linkedContent !== null) {
+          if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+          if (!t.linkedContents.includes(t.linkedContent)) {
+            t.linkedContents.push(t.linkedContent);
+          }
+          delete t.linkedContent;
+        }
+        if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+      });
+    } else {
+      trials = JSON.parse(JSON.stringify(DEFAULT_TRIALS));
+    }
+  } catch(e) {
+    contents = JSON.parse(JSON.stringify(DEFAULT_CONTENTS));
+    trials = JSON.parse(JSON.stringify(DEFAULT_TRIALS));
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('cs_contents', JSON.stringify(contents));
+    localStorage.setItem('cs_trials', JSON.stringify(trials));
+  } catch(e) {
+    console.warn('localStorage 保存失败', e);
+  }
+}
+
+function resetData() {
+  if(!confirm('确定要重置为默认数据吗？当前所有修改将丢失。')) return;
+  localStorage.removeItem('cs_contents');
+  localStorage.removeItem('cs_trials');
+  contents = JSON.parse(JSON.stringify(DEFAULT_CONTENTS));
+  trials = JSON.parse(JSON.stringify(DEFAULT_TRIALS));
+  renderAll();
+}
+
+function exportData() {
+  const data = { contents, trials, exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `content-studio-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(data.contents) contents = data.contents;
+        if(data.trials) {
+          trials = data.trials;
+          trials.forEach(t => {
+            if (t.linkedContent !== undefined && t.linkedContent !== null) {
+              if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+              if (!t.linkedContents.includes(t.linkedContent)) {
+                t.linkedContents.push(t.linkedContent);
+              }
+              delete t.linkedContent;
+            }
+            if (!Array.isArray(t.linkedContents)) t.linkedContents = [];
+          });
+        }
+        saveData();
+        renderAll();
+        alert('数据导入成功！');
+      } catch(err) {
+        alert('导入失败，文件格式不正确');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ==================== 应用逻辑 ====================
+let currentDate = new Date(2026,7,27), currentView='calendar', larkConnected=false, trialFilter='all', libFilter='all';
+const catEmoji={food:"🍔",drink:"🥤",watch:"📺",play:"🎮",other:"📦"};
+const catName={food:"吃的",drink:"喝的",watch:"看的",play:"玩的",other:"其他"};
+const verdictEmoji={bookmark:"🌱",pending:"⏳",rec:"⭐",trash:"🗑"};
+let contents, trials;
+let editingTrialId = null;
+
+loadData();
+
+function renderAll() {
+  if(currentView==='calendar'){renderCal();renderPublished();}
+  if(currentView==='library')renderLib();
+  if(currentView==='trials'){renderTrials();checkVideoAlert();}
+  if(currentView==='lark')renderLark();
+  updateStats();
+}
+
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  ['calendar','library','trials','lark'].forEach(x=>document.getElementById('view-'+x).classList.toggle('hidden',x!==v));
+  renderAll();
+}
+function updateStats(){
+  document.getElementById('sTotal').textContent=(contents?contents.length:0)+(trials?trials.length:0);
+  document.getElementById('sDraft').textContent=contents?contents.filter(c=>c.status==='draft').length:0;
+  document.getElementById('sBookmark').textContent=trials?trials.filter(t=>t.verdict==='bookmark').length:0;
+  document.getElementById('sRec').textContent=trials?trials.filter(t=>t.verdict==='rec').length:0;
+  document.getElementById('sTrash').textContent=trials?trials.filter(t=>t.verdict==='trash').length:0;
+}
+
+// ===== 全局搜索 =====
+function showSearch(){ document.getElementById('searchOverlay').classList.add('show'); document.getElementById('globalSearch').focus(); }
+function hideSearch(){ document.getElementById('searchOverlay').classList.remove('show'); }
+function hl(t,q){ if(!q)return t; const r=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); return t.replace(r,'<span class="search-hl">$1</span>'); }
+function doSearch(q){
+  const panel=document.getElementById('searchContent');
+  if(!q.trim()){ panel.innerHTML='<div class="search-empty">输入关键词开始搜索</div>'; return; }
+  const query=q.toLowerCase();
+  const tm=trials.filter(t=>t.name.toLowerCase().includes(query)||t.tags.some(tag=>tag.toLowerCase().includes(query))||t.note.toLowerCase().includes(query)||(t.source&&t.source.toLowerCase().includes(query)));
+  const cm=contents.filter(c=>c.title.toLowerCase().includes(query)||c.tags.some(tag=>tag.toLowerCase().includes(query))||c.desc.toLowerCase().includes(query));
+  let html='';
+  if(tm.length){
+    html+=`<div class="search-sec">🧪 试用记录 (${tm.length})</div>`;
+    html+=tm.map(t=>{
+      const linked = (t.linkedContents || []).map(lid => contents.find(c => c.id === lid)).filter(Boolean);
+      const badge=t.verdict==='rec'?'<span class="trial-badge badge-rec">⭐ 推荐</span>':t.verdict==='trash'?'<span class="trial-badge badge-trash">🗑 不推荐</span>':t.verdict==='bookmark'?'<span class="trial-badge badge-bookmark">🌱 种草待试</span>':'<span class="trial-badge badge-pending">⏳ 待评价</span>';
+      return `<div class="search-item"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="search-title">${catEmoji[t.cat]} ${hl(t.name,query)}</div>${badge}</div><div class="search-desc">${hl(t.note,query)}</div><div style="margin-top:6px;"><span class="search-pill" style="background:var(--pinkL);color:var(--pinkD);">${catName[t.cat]}</span>${linked.map(l=>`<span class="search-pill" style="background:var(--greenL);color:var(--green);">📎 ${l.title}</span>`).join('')}${t.source?`<span class="search-pill" style="background:var(--tealL);color:var(--teal);">📌 ${hl(t.source,query)}</span>`:''}</div></div>`;
+    }).join('');
+  }
+  if(cm.length){
+    html+=`<div class="search-sec">📚 已发布内容 (${cm.length})</div>`;
+    html+=cm.map(c=>`<div class="search-item"><div class="search-title">✅ ${hl(c.title,query)}</div><div class="search-desc">${hl(c.desc,query)}</div><div style="margin-top:6px;">${c.tags.map(t=>`<span class="search-pill" style="background:var(--pinkL);color:var(--pinkD);">${hl(t,query)}</span>`).join('')}</div></div>`).join('');
+  }
+  if(!tm.length&&!cm.length) html=`<div class="search-empty">没有找到与 "${q}" 相关的内容</div>`;
+  panel.innerHTML=html;
+}
+
+// ===== 备选库>=6触发提醒 =====
+function checkVideoAlert(){
+  const recs=trials.filter(t=>t.verdict==='rec');
+  const catCount={};
+  recs.forEach(t=>{catCount[t.cat]=(catCount[t.cat]||0)+1;});
+  const alerts=[];
+  Object.entries(catCount).forEach(([cat,count])=>{if(count>=6)alerts.push({cat,count});});
+  const box=document.getElementById('videoAlert');
+  if(alerts.length){
+    box.innerHTML=alerts.map(a=>`<div class="alert-box"><div class="alert-icon">🎬</div><div class="alert-text"><div class="alert-title">${catName[a.cat]} 备选库已满 ${a.count} 样！</div><div class="alert-desc">可以制作一个「${catName[a.cat]}推荐」视频了</div></div><button class="btn btn-green" onclick="createVideoTopic('${a.cat}')">生成选题</button></div>`).join('');
+  }else{box.innerHTML='';}
+}
+function createVideoTopic(cat){
+  const recs=trials.filter(t=>t.verdict==='rec'&&t.cat===cat);
+  const names=recs.map(t=>t.name).join('、');
+  contents.push({id:Date.now(),title:`${catName[cat]}推荐｜${recs.length}款良心安利`,type:"video",status:"draft",tags:[catName[cat],"推荐"],date:"",desc:`包含：${names}`});
+  saveData();
+  alert(`已生成选题：${catName[cat]}推荐｜${recs.length}款良心安利`);
+  switchView('library');
+}
+
+// ===== 试用 =====
+function setTrialFilter(f){
+  trialFilter=f;
+  document.querySelectorAll('.trial-tab').forEach(t=>t.classList.remove('active'));
+  const map={all:0,bookmark:1,pending:2,rec:3,trash:4};
+  document.querySelectorAll('.trial-tab')[map[f]]?.classList.add('active');
+  renderTrials();
+}
+
+function getVerdictBadge(v) {
+  if(v==='rec') return '<span class="trial-badge badge-rec">⭐ 推荐</span>';
+  if(v==='trash') return '<span class="trial-badge badge-trash">🗑 不推荐</span>';
+  if(v==='bookmark') return '<span class="trial-badge badge-bookmark">🌱 种草待试</span>';
+  return '<span class="trial-badge badge-pending">⏳ 待评价</span>';
+}
+
+function renderTrials(){
+  const list=document.getElementById('trialList');
+  let items=trialFilter==='all'?trials:trials.filter(t=>t.verdict===trialFilter);
+  items=items.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!items.length){ list.innerHTML='<div class="empty">还没有记录</div>'; }
+  else {
+    list.innerHTML=items.map(t=>{
+      const linked = (t.linkedContents || []).map(lid => contents.find(c => c.id === lid)).filter(Boolean);
+      const badge = getVerdictBadge(t.verdict);
+      
+      const flows = [];
+      if(t.verdict !== 'bookmark') flows.push(`<button class="trial-action trial-action-orange" onclick="toggleTrial(${t.id},'bookmark')" title="移到种草">🌱</button>`);
+      if(t.verdict !== 'pending') flows.push(`<button class="trial-action trial-action-orange" onclick="toggleTrial(${t.id},'pending')" title="移到待评价">⏳</button>`);
+      if(t.verdict !== 'rec') flows.push(`<button class="trial-action trial-action-green" onclick="toggleTrial(${t.id},'rec')" title="移到备选库">⭐</button>`);
+      if(t.verdict !== 'trash') flows.push(`<button class="trial-action trial-action-red" onclick="toggleTrial(${t.id},'trash')" title="移到垃圾桶">🗑</button>`);
+      
+      return `<div class="trial-item">
+        <div class="trial-thumb">${catEmoji[t.cat]}</div>
+        <div class="trial-info">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="trial-name">${t.name}</div>
+            ${badge}
+          </div>
+          <div class="trial-meta">
+            <span>${catName[t.cat]}</span><span>·</span><span>${t.date}</span>
+            ${t.tags.map(tag=>`<span>·</span><span class="tag tag-pink">${tag}</span>`).join('')}
+          </div>
+          ${t.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px;">${t.note}</div>`:''}
+          ${t.source?`<div class="trial-source">📌 来源：${t.source}</div>`:''}
+          ${linked.map(l=>`<div class="trial-linked">📎 已推荐于《${l.title}》</div>`).join('')}
+        </div>
+        <div class="trial-actions">
+          <button class="trial-action trial-action-blue" onclick="openTrialModal(${t.id})" title="编辑">✏️</button>
+          ${flows.join('')}
+          <button class="trial-action" onclick="delTrial(${t.id})" title="删除">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function openTrialModal(id){
+  editingTrialId = id || null;
+  const t = id ? trials.find(x => x.id === id) : null;
+  
+  document.getElementById('tName').value = t ? t.name : '';
+  document.getElementById('tCat').value = t ? t.cat : 'food';
+  document.getElementById('tVerdict').value = t ? t.verdict : 'bookmark';
+  document.getElementById('tSource').value = t ? (t.source || '') : '';
+  document.getElementById('tNote').value = t ? (t.note || '') : '';
+  
+  const linkContainer = document.getElementById('tLink');
+  if (contents.length === 0) {
+    linkContainer.innerHTML = '<div style="padding:10px;font-size:13px;color:var(--text2);">还没有已发布内容，先去日历里添加吧</div>';
+  } else {
+    linkContainer.innerHTML = contents.map(c => {
+      const checked = t && t.linkedContents && t.linkedContents.includes(c.id) ? 'checked' : '';
+      return `<label><input type="checkbox" value="${c.id}" ${checked}><span>${c.title}</span></label>`;
+    }).join('');
+  }
+  
+  document.getElementById('modalTitle').textContent = t ? '编辑试用' : '记录试用';
+  document.getElementById('trialModal').classList.add('show');
+}
+
+function closeTrialModal(){ 
+  document.getElementById('trialModal').classList.remove('show'); 
+  editingTrialId = null;
+}
+
+function saveTrial(){
+  const name = document.getElementById('tName').value;
+  const cat = document.getElementById('tCat').value;
+  const verdict = document.getElementById('tVerdict').value;
+  const note = document.getElementById('tNote').value;
+  const source = document.getElementById('tSource').value;
+  
+  const checked = Array.from(document.querySelectorAll('#tLink input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+  
+  if (!name) return alert('请输入名称');
+  
+  if (editingTrialId) {
+    const t = trials.find(x => x.id === editingTrialId);
+    if (t) {
+      t.name = name;
+      t.cat = cat;
+      t.verdict = verdict;
+      t.note = note;
+      t.source = source;
+      t.linkedContents = checked;
+    }
+  } else {
+    trials.unshift({
+      id: Date.now(),
+      name, cat, verdict, note, source,
+      date: new Date().toISOString().slice(0, 10),
+      linkedContents: checked,
+      tags: []
+    });
+  }
+  
+  document.getElementById('tName').value = '';
+  document.getElementById('tNote').value = '';
+  document.getElementById('tSource').value = '';
+  
+  closeTrialModal();
+  saveData();
+  renderTrials();
+  checkVideoAlert();
+  updateStats();
+}
+
+function fastTrial(){
+  const name=document.getElementById('ftName').value, cat=document.getElementById('ftCat').value, verdict=document.getElementById('ftVerdict').value;
+  const note=document.getElementById('ftNote').value, source=document.getElementById('ftSource').value;
+  if(!name)return alert('请输入名称');
+  trials.unshift({
+    id: Date.now(),
+    name, cat, verdict, note, source,
+    date: new Date().toISOString().slice(0, 10),
+    linkedContents: [],
+    tags: []
+  });
+  document.getElementById('ftName').value=''; 
+  document.getElementById('ftNote').value=''; 
+  document.getElementById('ftSource').value='';
+  saveData(); 
+  renderTrials(); 
+  checkVideoAlert(); 
+  updateStats();
+}
+
+function toggleTrial(id,v){ 
+  const t=trials.find(x=>x.id===id); 
+  if(t){
+    t.verdict=v; 
+    saveData(); 
+    renderTrials(); 
+    checkVideoAlert(); 
+    updateStats();
+  } 
+}
+
+function delTrial(id){ 
+  trials=trials.filter(t=>t.id!==id); 
+  saveData(); 
+  renderTrials(); 
+  checkVideoAlert(); 
+  updateStats(); 
+}
+
+// ===== 自动整理 =====
+function autoOrg(){
+  const input=document.getElementById('orgInput').value.trim(),result=document.getElementById('orgResult');
+  if(!input)return;
+  result.innerHTML='<div style="font-size:13px;color:var(--text2);padding:12px;">整理中...</div>';
+  setTimeout(()=>{
+    const extracted=[];const known=["星露谷物语","动物森友会","黑神话悟空","塞尔达","空洞骑士","哈迪斯","艾尔登法环","咖啡","拿铁","游戏","美食","影视"];
+    known.forEach(k=>{if(input.includes(k))extracted.push(k);});
+    const hasVideo=input.includes("视频")||input.includes("拍")||input.includes("剪辑");
+    const related=contents.filter(c=>c.tags.some(t=>input.includes(t)));
+    const relatedTrials=trials.filter(t=>t.verdict==='rec'&&t.tags.some(tag=>input.includes(tag)||extracted.some(e=>t.name.includes(e))));
+    result.innerHTML=`<div style="background:var(--bg);border-radius:12px;padding:14px;border:1px solid var(--border);"><div style="font-size:12px;color:var(--pinkD);font-weight:600;margin-bottom:8px;">✨ 整理结果</div><div style="font-size:13px;margin-bottom:8px;"><b>建议标题：</b>「${extracted.includes('游戏')?'游戏推荐':extracted.includes('咖啡')?'咖啡日记':extracted.includes('影视')?'电子榨菜':'创作笔记'}」${extracted.filter(e=>e!=='游戏'&&e!=='咖啡'&&e!=='影视').slice(0,2).join('×')}</div><div style="font-size:13px;margin-bottom:8px;"><b>内容类型：</b>${hasVideo?'视频':'图文笔记'}</div><div style="font-size:13px;margin-bottom:8px;"><b>自动标签：</b>${extracted.map(e=>`<span class="tag tag-pink">${e}</span>`).join('')||'<span style="color:var(--text2);">未识别</span>'}</div>${related.length?`<div style="font-size:13px;margin-bottom:8px;"><b>关联已发布：</b>${related.map(r=>`<span style="color:var(--pinkD);">• ${r.title}</span>`).join('<br>')}</div>`:''}${relatedTrials.length?`<div style="font-size:13px;margin-bottom:8px;"><b>可引用备选库 (${relatedTrials.length}条)：</b>${relatedTrials.map(r=>`<span style="color:var(--green);">• ${r.name}</span>`).join('<br>')}</div>`:''}<button class="btn" style="width:100%;margin-top:12px;" onclick="saveOrg()">💾 保存为选题</button></div>`;
+  },600);
+}
+function saveOrg(){
+  const input=document.getElementById('orgInput').value;
+  contents.push({id:Date.now(),title:"整理："+input.slice(0,15)+"...",type:"video",status:"draft",tags:[],date:"",desc:input});
+  saveData();
+  document.getElementById('orgInput').value='';document.getElementById('orgResult').innerHTML='';
+  updateStats();
+}
+
+// ===== 日历 =====
+function renderCal(){
+  const y=currentDate.getFullYear(), m=currentDate.getMonth();
+  document.getElementById('calMonth').textContent=`${y}年${m+1}月`;
+  const fd=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate(), dip=new Date(y,m,0).getDate();
+  const grid=document.getElementById('calGrid'); grid.innerHTML='';
+  ['日','一','二','三','四','五','六'].forEach(d=>{const e=document.createElement('div');e.className='calendar-weekday';e.textContent=d;grid.appendChild(e);});
+  for(let i=fd-1;i>=0;i--)grid.appendChild(mkDay(dip-i,true));
+  for(let d=1;d<=dim;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;grid.appendChild(mkDay(d,false,ds,ds==='2026-08-27'));}
+  const rem=(7-((fd+dim)%7))%7;for(let d=1;d<=rem;d++)grid.appendChild(mkDay(d,true));
+}
+function mkDay(day,other,ds,today){
+  const c=document.createElement('div');c.className='calendar-day'+(other?' other-month':'')+(today?' today':'');c.innerHTML=`<div class="calendar-day-number">${day}</div>`;
+  if(!other&&ds){
+    const items=contents.filter(x=>x.date===ds);
+    if(items.length){
+      const ev=document.createElement('div');ev.className='calendar-events';
+      items.slice(0,2).forEach(it=>{const d=document.createElement('div');d.className='calendar-event cal-green';d.textContent=it.title.slice(0,5)+'...';ev.appendChild(d);});
+      if(items.length>2){const m=document.createElement('div');m.style.cssText='font-size:9px;color:var(--text2);text-align:center;';m.textContent=`+${items.length-2}`;ev.appendChild(m);}
+      c.appendChild(ev);
+    }
+  }
+  return c;
+}
+function changeMonth(d){currentDate.setMonth(currentDate.getMonth()+d);renderCal();}
+function goToday(){currentDate=new Date(2026,7,27);renderCal();}
+function renderPublished(){
+  const el=document.getElementById('publishedList');
+  el.innerHTML=contents.map(c=>`<div style="padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:8px;border-left:3px solid var(--green);"><div style="font-size:13px;font-weight:600;">✅ ${c.title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">${c.date} · ${c.tags.slice(0,3).map(t=>`<span class="tag tag-pink">${t}</span>`).join('')}</div></div>`).join('');
+}
+function quickAdd(){
+  const title=document.getElementById('qTitle').value, type=document.getElementById('qType').value, date=document.getElementById('qDate').value;
+  if(!title||!date)return alert('请填写标题和日期');
+  contents.push({id:Date.now(),title,type:'video',status:type,tags:[],date,desc:''});
+  saveData();
+  document.getElementById('qTitle').value=''; document.getElementById('qDate').value='';
+  renderCal(); renderPublished(); updateStats();
+}
+
+// ===== 内容库 =====
+function renderLib(){
+  const s=document.getElementById('libSearch').value.toLowerCase();
+  let items=[...contents];
+  if(libFilter==='game')items=items.filter(c=>c.tags.includes('游戏'));
+  if(libFilter==='food')items=items.filter(c=>c.tags.includes('咖啡')||c.tags.includes('美食'));
+  if(libFilter==='published')items=items.filter(c=>c.status==='published');
+  if(libFilter==='draft')items=items.filter(c=>c.status==='draft');
+  if(s)items=items.filter(c=>c.title.includes(s)||c.tags.some(t=>t.includes(s)));
+  const grid=document.getElementById('libGrid');
+  grid.innerHTML=items.length?items.map(c=>{const tc=c.tags.includes('游戏')?'tag-game':c.tags.includes('咖啡')||c.tags.includes('美食')?'tag-food':'tag-pink';return`<div class="content-card"><div class="content-title">${c.status==='published'?'✅':'📝'} ${c.title}</div><div class="content-meta">${c.date||'未安排'} · ${c.tags.slice(0,3).map(t=>`<span class="tag ${tc}">${t}</span>`).join('')}</div></div>`;}).join(''):'<div class="empty" style="grid-column:1/-1;">没有找到匹配的内容</div>';
+}
+function doRelSearch(){
+  const q=document.getElementById('relSearch').value.trim(), c=document.getElementById('relResults');
+  if(!q){c.innerHTML='';return;}
+  const m=contents.filter(x=>x.title.includes(q)||x.tags.some(t=>t.includes(q)));
+  c.innerHTML=m.length?m.map(x=>`<div style="padding:10px;background:var(--bg);border-radius:10px;margin-bottom:8px;"><div style="font-weight:600;font-size:13px;">${x.title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">${x.tags.map(t=>`<span class="tag tag-pink">${t}</span>`).join('')}</div></div>`).join(''):'<div style="font-size:12px;color:var(--text2);padding:8px;">未找到关联内容</div>';
+}
+
+// ===== 飞书 =====
+function renderLark(){
+  const status=document.getElementById('larkStatus'),docs=document.getElementById('larkDocs');
+  if(larkConnected){
+    status.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--greenL);border-radius:10px;margin-bottom:12px;font-size:13px;';
+    status.innerHTML=`<span>✅</span><span>已连接飞书文档</span><button class="btn btn-sm btn-outline" style="margin-left:auto;" onclick="syncLark()">🔄 同步</button>`;
+    docs.innerHTML=larkDocs.map(d=>`<div class="lark-doc"><div class="lark-icon">${d.type==='sheet'?'📊':'📄'}</div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.title}</div><div style="font-size:11px;color:var(--text2);">更新于 ${d.updated}</div></div><span class="tag" style="background:#e8eaf6;color:#3f51b5;">飞书</span></div>`).join('');
+  }else{
+    status.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--pinkS);border-radius:10px;margin-bottom:12px;font-size:13px;';
+    status.innerHTML=`<span>📡</span><span>未连接飞书文档</span><button class="btn btn-sm btn-outline" style="margin-left:auto;" onclick="connectLark()">连接</button>`;
+    docs.innerHTML='<div class="empty">连接飞书后，文档自动同步到这里</div>';
+  }
+}
+function connectLark(){larkConnected=true;renderLark();}
+function syncLark(){alert('正在同步飞书文档...');}
+
+// ===== 初始化 =====
+renderCal(); renderPublished(); renderTrials(); checkVideoAlert(); updateStats();
+</script>
+
+</body>
+</html>
